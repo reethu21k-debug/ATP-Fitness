@@ -11,8 +11,8 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
   const profile = await getCurrentProfile();
-  if (!profile?.gym_id || !["gym_owner", "receptionist", "super_admin"].includes(profile.role)) {
-    return NextResponse.json({ error: "Not permitted." }, { status: 403 });
+  if (!profile?.gym_id || !["gym_owner", "receptionist", "trainer", "super_admin"].includes(profile.role)) {
+  return NextResponse.json({ error: "Not permitted." }, { status: 403 });
   }
 
   const payload = generateCurrentQrToken(profile.gym_id);

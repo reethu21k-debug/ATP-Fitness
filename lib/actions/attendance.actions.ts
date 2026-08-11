@@ -149,7 +149,57 @@ export async function manualCheckIn(memberId: string): Promise<ActionResult> {
 
   revalidatePath("/dashboard/owner/attendance");
   revalidatePath("/dashboard/reception/attendance");
+  revalidatePath("/dashboard/trainer/attendance");
   return { success: true };
+}
+
+// ============================================================================
+// MEMBER LOOKUP — lightweight search used by the manual check-in panel.
+// ============================================================================
+export interface CheckInMemberOption {
+  memberId: string;
+  fullName: string;
+  phone: string | null;
+  status: string | null;
+  alreadyCheckedIn: boolean;
+}
+
+export async function searchMembersForCheckIn(query: string): Promise<CheckInMemberOption[]> {
+  try {
+    await requirePermission("attendance", "create");
+  } catch {
+    return [];
+  }
+  if (!query || query.trim().length < 2) return [];
+
+  const actor = await getCurrentProfile();
+  if (!actor?.gym_id) return [];
+
+  const supabase = await createClient();
+  const { data: members } = await supabase
+    .from("members_overview")
+    .select("profile_id, full_name, phone, status")
+    .eq("gym_id", actor.gym_id)
+    .or(`full_name.ilike.%${query}%,phone.ilike.%${query}%`)
+    .limit(8);
+
+  if (!members?.length) return [];
+
+  const { data: openSessions } = await supabase
+    .from("attendance_records")
+    .select("member_id")
+    .in("member_id", members.map((m) => m.profile_id))
+    .is("check_out_at", null);
+
+  const openIds = new Set((openSessions ?? []).map((s) => s.member_id));
+
+  return members.map((m) => ({
+    memberId: m.profile_id,
+    fullName: m.full_name,
+    phone: m.phone,
+    status: m.status,
+    alreadyCheckedIn: openIds.has(m.profile_id),
+  }));
 }
 
 // ============================================================================

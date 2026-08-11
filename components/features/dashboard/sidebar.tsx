@@ -54,6 +54,7 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
   trainer: [
     { href: "/dashboard/trainer", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/trainer/clients", label: "My Clients", icon: Users },
+    { href: "/dashboard/trainer/attendance", label: "Attendance", icon: QrCode },
     { href: "/dashboard/trainer/chat", label: "Chat", icon: MessagesSquare },
   ],
   member: [

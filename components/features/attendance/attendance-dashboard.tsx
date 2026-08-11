@@ -9,6 +9,7 @@ import {
 import { StatCard } from "@/components/features/dashboard/stat-card";
 import { PeakHoursChart } from "@/components/features/attendance/peak-hours-chart";
 import { StreaksOverviewWidget } from "@/components/features/attendance/streaks-overview-widget";
+import { ManualCheckInPanel } from "@/components/features/attendance/manual-checkin-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -58,6 +59,8 @@ export async function AttendanceDashboard({
           tone="warning"
         />
       </div>
+
+      <ManualCheckInPanel />
 
       <Card>
         <CardHeader>
