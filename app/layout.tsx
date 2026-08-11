@@ -1,0 +1,53 @@
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/components/shared/theme-provider';
+import { QueryProvider } from '@/components/shared/query-provider';
+import { Preloader } from '@/components/shared/preloader';
+import './globals.css';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+
+export const metadata: Metadata = {
+  title: { default: 'ATP Fitness — Train Different', template: '%s · ATP Fitness' },
+  description:
+    'ATP Fitness is a modern strength and conditioning gym in Anantapur. Personal training, group classes, and a members app to track it all.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+  openGraph: {
+    title: 'ATP Fitness — Train Different',
+    description: 'Personal training, group classes, and a members app to track it all.',
+    type: 'website',
+  },
+};
+
+const THEME_BOOT_SCRIPT = `
+(function() {
+  try {
+    var stored = localStorage.getItem('atp-fitness-theme');
+    var theme = stored || 'system';
+    var resolved = theme === 'system'
+      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : theme;
+    if (resolved === 'dark') document.documentElement.classList.add('dark');
+  } catch (e) {}
+})();
+`;
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
+      <body className={`${inter.variable} font-sans`}>
+        <ThemeProvider>
+          <QueryProvider>
+            <Preloader />
+            {children}
+            <Toaster richColors position="top-right" />
+          </QueryProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
