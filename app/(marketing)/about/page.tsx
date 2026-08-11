@@ -1,15 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Clock } from "lucide-react";
 
 const VALUES = [
   { title: "Coaching, not just equipment", desc: "Anyone can rent floor space. Our trainers actually adjust your plan based on what's working — every two weeks, not once at signup." },
   { title: "No pressure, no upselling", desc: "You'll never be talked into a plan you don't need. Try the floor free, then decide." },
   { title: "A gym you can actually track", desc: "Workouts, diet, and attendance — all visible to you and your trainer in the members app, not locked in a notebook at the front desk." },
-];
-
-const STATS = [
-  { value: "[20XX]", label: "Founded" },
-  { value: "500+", label: "Members" },
-  { value: "12", label: "Trainers" },
 ];
 
 export const metadata = { title: "About — ATP Fitness" };
@@ -26,13 +21,13 @@ export default function AboutPage() {
         </p>
       </div>
 
-      <div className="mx-auto mt-14 grid max-w-md grid-cols-3 gap-6 border-y py-8 text-center">
-        {STATS.map((s) => (
-          <div key={s.label}>
-            <p className="text-2xl font-semibold">{s.value}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
-          </div>
-        ))}
+      <div className="mx-auto mt-14 flex max-w-xs items-center justify-center gap-3 rounded-full border bg-card px-6 py-3 text-center shadow-sm">
+        <Clock className="h-4 w-4 shrink-0 text-primary" />
+        <p className="text-sm">
+          <span className="font-semibold">Open daily</span>
+          <span className="mx-1.5 text-muted-foreground">·</span>
+          <span className="text-muted-foreground">5AM – 11PM</span>
+        </p>
       </div>
 
       <div className="mt-20 grid gap-6 sm:grid-cols-3">

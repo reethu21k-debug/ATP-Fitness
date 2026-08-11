@@ -23,7 +23,7 @@ export function ExportButtons({
         variant="outline"
         size="sm"
         disabled={disabled}
-        onClick={() => exportReportToPdf(title, columns, rows, filename)}
+        onClick={() => void exportReportToPdf(title, columns, rows, filename)}
       >
         <FileDown className="h-4 w-4" /> PDF
       </Button>
@@ -31,7 +31,7 @@ export function ExportButtons({
         variant="outline"
         size="sm"
         disabled={disabled}
-        onClick={() => exportReportToExcel(columns, rows, filename)}
+        onClick={() => void exportReportToExcel(columns, rows, filename)}
       >
         <Sheet className="h-4 w-4" /> Excel
       </Button>

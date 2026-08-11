@@ -1,8 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requirePermission, requireRole, getCurrentProfile, PermissionError } from "@/lib/utils/permissions";
+import { sendEmail, subscriptionConfirmationEmailHtml, subscriptionConfirmationEmailText } from "@/lib/services/email";
+import { generateInvoicePdfBuffer } from "@/lib/services/invoice-pdf";
+import { uploadBufferToCloudinary } from "@/lib/services/cloudinary";
+import { buildInvoiceDownloadUrl } from "@/lib/services/invoice-links";
 import type { ActionResult } from "./auth.actions";
 import type { PaymentMethod } from "@/types/database";
 
@@ -113,6 +117,91 @@ export async function recordPayment(input: RecordPaymentInput): Promise<ActionRe
         })
         .eq("id", input.membershipId);
     }
+  }
+
+  // Generate the PDF invoice for this payment and email it to the member as a
+  // "payment confirmed" receipt with a Download Invoice link — mirrors the
+  // confirmation email sent on member creation (see member.actions.ts),
+  // but was previously missing here, so renewals/top-up payments never got
+  // an invoice link at all. Best-effort: never fails the payment itself.
+  try {
+    const admin = createAdminClient();
+
+    const [{ data: member }, { data: gymDetails }] = await Promise.all([
+      admin.from("profiles").select("full_name, email").eq("id", input.memberId).single(),
+      admin.from("gyms").select("name, address, city, phone, email").eq("id", actor.gym_id).single(),
+    ]);
+
+    let planName: string | null = null;
+    let membershipStartDate: string | null = null;
+    let membershipEndDate: string | null = null;
+    let membershipDurationDays = 0;
+
+    if (input.membershipId) {
+      const { data: membershipDetails } = await admin
+        .from("member_memberships")
+        .select("start_date, end_date, membership_plans:plan_id(name, duration_days)")
+        .eq("id", input.membershipId)
+        .single();
+      if (membershipDetails) {
+        membershipStartDate = membershipDetails.start_date;
+        membershipEndDate = membershipDetails.end_date;
+        const plan = membershipDetails.membership_plans as unknown as { name: string; duration_days: number } | null;
+        planName = plan?.name ?? null;
+        membershipDurationDays = plan?.duration_days ?? 0;
+      }
+    }
+
+    const pdfBuffer = generateInvoicePdfBuffer({
+      gym: gymDetails ?? { name: "ATP Fitness" },
+      invoiceNumber,
+      receiptNumber,
+      issuedAt: payment.created_at,
+      billedToName: member?.full_name ?? "Member",
+      lineItems: [{ description: planName ? `${planName} membership payment` : "Membership payment", amount: input.amount }],
+      gstRate,
+      gstAmount,
+      totalAmount,
+      method: input.method,
+      splits: input.method === "split" ? input.splits?.map((s) => ({ method: s.method, amount: s.amount, transactionReference: s.transactionReference })) : undefined,
+    });
+
+    await uploadBufferToCloudinary(pdfBuffer, "invoices", `invoice-${invoiceNumber}`);
+    const invoiceUrl = buildInvoiceDownloadUrl(invoiceNumber);
+
+    if (member?.email) {
+      const gymName = gymDetails?.name ?? "your gym";
+      await sendEmail({
+        to: member.email,
+        subject: `Payment confirmed — ${gymName}`,
+        html: subscriptionConfirmationEmailHtml({
+          memberName: member.full_name ?? "there",
+          gymName,
+          planName: planName ?? "Membership",
+          startDate: membershipStartDate ?? payment.created_at,
+          endDate: membershipEndDate ?? payment.created_at,
+          durationDays: membershipDurationDays,
+          amountPaid: input.amount,
+          paymentDate: payment.created_at,
+          paymentMethod: input.method,
+          invoiceUrl,
+        }),
+        text: subscriptionConfirmationEmailText({
+          memberName: member.full_name ?? "there",
+          gymName,
+          planName: planName ?? "Membership",
+          startDate: membershipStartDate ?? payment.created_at,
+          endDate: membershipEndDate ?? payment.created_at,
+          durationDays: membershipDurationDays,
+          amountPaid: input.amount,
+          paymentDate: payment.created_at,
+          paymentMethod: input.method,
+          invoiceUrl,
+        }),
+      });
+    }
+  } catch (invoiceErr) {
+    console.error("recordPayment: invoice PDF generation/email failed:", invoiceErr);
   }
 
   revalidatePath("/dashboard/owner/payments");

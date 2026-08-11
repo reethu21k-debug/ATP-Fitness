@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { downloadBlob } from "./download-file";
 
 export interface ExportColumn {
   key: string;
@@ -8,7 +9,7 @@ export interface ExportColumn {
 }
 
 /** Client-side-only PDF export using the report's own already-fetched rows — no server round trip. */
-export function exportReportToPdf(
+export async function exportReportToPdf(
   title: string,
   columns: ExportColumn[],
   rows: Record<string, unknown>[],
@@ -29,11 +30,12 @@ export function exportReportToPdf(
     headStyles: { fillColor: [30, 41, 59] },
   });
 
-  doc.save(`${filename}.pdf`);
+  const blob = doc.output("blob");
+  await downloadBlob(blob, `${filename}.pdf`);
 }
 
 /** Client-side-only Excel export via SheetJS, same row/column shape as the PDF export. */
-export function exportReportToExcel(
+export async function exportReportToExcel(
   columns: ExportColumn[],
   rows: Record<string, unknown>[],
   filename: string,
@@ -47,7 +49,12 @@ export function exportReportToExcel(
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-  XLSX.writeFile(workbook, `${filename}.xlsx`);
+
+  const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  await downloadBlob(blob, `${filename}.xlsx`);
 }
 
 function formatCell(value: unknown): string {
