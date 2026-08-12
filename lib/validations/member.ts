@@ -12,8 +12,12 @@ export const memberFormSchema = z.object({
   emergencyContactPhone: z.string().optional(),
   bloodGroup: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "unknown"]).default("unknown"),
   medicalConditions: z.string().optional(),
-  heightCm: z.coerce.number().positive().optional(),
-  weightKg: z.coerce.number().positive().optional(),
+  // Preprocess strips "" to undefined before coercion -- otherwise
+  // z.coerce.number() turns an empty (left-blank) field into 0, which then
+  // fails .positive() and blocks submission even though these are meant to
+  // be fully optional.
+  heightCm: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.coerce.number().positive().optional()),
+  weightKg: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.coerce.number().positive().optional()),
   joiningDate: z.string().min(1, "Select a joining date."),
 
   // Membership

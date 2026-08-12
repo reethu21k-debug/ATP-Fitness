@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { PhotoUpload } from "./photo-upload";
 import { createMember } from "@/lib/actions/member.actions";
@@ -51,6 +51,27 @@ export function MemberForm({
 
   const selectedPlanId = form.watch("planId");
   const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+  const enteredAmount = form.watch("amount");
+
+  // Default the charged Amount to the selected plan's price. Only overwrites
+  // when the field is still empty/untouched so an owner can freely discount
+  // by editing Amount afterwards without this effect stomping their edit
+  // every time they touch something else on the form.
+  useEffect(() => {
+    if (selectedPlan && !form.formState.dirtyFields.amount) {
+      form.setValue("amount", selectedPlan.price);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPlan?.id]);
+
+  // Discount is derived, not manually entered: it's simply what's being
+  // waived off the plan's list price by charging less than sticker price.
+  useEffect(() => {
+    if (!selectedPlan) return;
+    const amountNum = Number(enteredAmount ?? 0);
+    const computedDiscount = Math.max(selectedPlan.price - amountNum, 0);
+    form.setValue("discountAmount", computedDiscount);
+  }, [selectedPlan, enteredAmount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function onSubmit(values: MemberFormInput) {
     setServerError(null);
@@ -120,30 +141,33 @@ export function MemberForm({
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Emergency contact & medical</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Emergency contact & medical</CardTitle>
+          <CardDescription>Optional — add whatever you have on hand; nothing here blocks creating the member.</CardDescription>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Emergency contact name">
+            <Field label="Emergency contact name (optional)">
               <Input {...form.register("emergencyContactName")} placeholder="Contact name" />
             </Field>
-            <Field label="Emergency contact phone">
+            <Field label="Emergency contact phone (optional)">
               <Input {...form.register("emergencyContactPhone")} placeholder="+919876543210" />
             </Field>
-            <Field label="Blood group">
+            <Field label="Blood group (optional)">
               <Select className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm" {...form.register("bloodGroup")}>
                 {["unknown", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
                   <option key={bg} value={bg}>{bg === "unknown" ? "Unknown" : bg}</option>
                 ))}
               </Select>
             </Field>
-            <Field label="Height (cm)">
+            <Field label="Height (cm) (optional)">
               <Input type="number" step="0.1" {...form.register("heightCm")} />
             </Field>
-            <Field label="Weight (kg)">
+            <Field label="Weight (kg) (optional)">
               <Input type="number" step="0.1" {...form.register("weightKg")} />
             </Field>
           </div>
-          <Field label="Medical conditions">
+          <Field label="Medical conditions (optional)">
             <Input {...form.register("medicalConditions")} placeholder="Any conditions the trainer should know about" />
           </Field>
         </CardContent>
@@ -174,16 +198,21 @@ export function MemberForm({
             <Field label="Start date" error={form.formState.errors.startDate?.message}>
               <Input type="date" {...form.register("startDate")} />
             </Field>
-            <Field label="Amount (₹)">
+            <Field label="Amount (₹)" hint={selectedPlan ? `Plan price: ₹${selectedPlan.price}` : undefined}>
+              <Input type="number" step="0.01" {...form.register("amount")} />
+            </Field>
+            <Field label="Discount (₹)" hint="Auto-calculated: plan price minus the amount charged.">
+              {/* readOnly (not `disabled`) so react-hook-form still submits the
+                  computed value -- a native `disabled` attribute would make
+                  the browser/RHF omit this field's value entirely on submit. */}
               <Input
                 type="number"
                 step="0.01"
-                {...form.register("amount")}
-                defaultValue={selectedPlan?.price}
+                readOnly
+                tabIndex={-1}
+                {...form.register("discountAmount")}
+                className="cursor-not-allowed bg-secondary/40 text-muted-foreground"
               />
-            </Field>
-            <Field label="Discount (₹)">
-              <Input type="number" step="0.01" {...form.register("discountAmount")} />
             </Field>
             <Field label="Amount paid (₹)">
               <Input type="number" step="0.01" {...form.register("amountPaid")} />
@@ -209,11 +238,22 @@ export function MemberForm({
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  hint,
+  children,
+}: {
+  label: string;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
       {children}
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
