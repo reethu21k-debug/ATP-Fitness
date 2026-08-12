@@ -51,7 +51,13 @@ export async function createCampaign(input: CreateCampaignInput): Promise<Action
   if (!actor?.gym_id) return { success: false, error: "Your account isn't linked to a gym." };
 
   const supabase = await createClient();
-  const status = input.scheduledAt ? "scheduled" : input.sendNow ? "sending" : "draft";
+  // NOTE: even for sendNow, the row starts as "draft" -- dispatchCampaign()
+  // is the single place that transitions a campaign into "sending" (and
+  // then "sent"). It also uses "sending" as a guard against double-sends,
+  // so if we set that status here first, dispatchCampaign sees the row
+  // already "sending" and skips it -- the campaign gets stuck showing
+  // "Sending" forever with 0/0 recipients and nothing actually goes out.
+  const status = input.scheduledAt ? "scheduled" : "draft";
 
   const { data: campaign, error } = await supabase
     .from("marketing_campaigns")
@@ -97,6 +103,10 @@ async function dispatchCampaignNow(campaignId: string): Promise<ActionResult> {
     const admin = createAdminClient();
     const result = await dispatchCampaign(admin, campaignId);
     if (result.error) return { success: false, error: result.error };
+    // Defense in depth: if dispatchCampaign ever reports "skipped" here, treat
+    // it as a failure instead of silently reporting success -- a skip means
+    // no email/WhatsApp actually went out.
+    if (result.skipped) return { success: false, error: `Campaign was not sent (${result.reason ?? "already in progress"}).` };
     return { success: true };
   } catch (err) {
     console.error(`marketing: dispatchCampaignNow failed for campaign ${campaignId}:`, err);
@@ -111,9 +121,10 @@ export async function sendCampaignNow(campaignId: string): Promise<ActionResult>
     return { success: false, error: "You do not have permission to send campaigns." };
   }
 
-  const supabase = await createClient();
-  await supabase.from("marketing_campaigns").update({ status: "sending" }).eq("id", campaignId);
-
+  // dispatchCampaign() (via dispatchCampaignNow) sets status to "sending"
+  // itself once it confirms the campaign isn't already sending/sent -- see
+  // the note in createCampaign() above for why setting it here first would
+  // cause the send to be skipped.
   const result = await dispatchCampaignNow(campaignId);
   revalidateMarketing();
   return result;

@@ -36,6 +36,7 @@ export function CampaignsPanel({
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -50,14 +51,18 @@ export function CampaignsPanel({
 
   async function handleSendNow(id: string) {
     setBusyId(id);
-    await sendCampaignNow(id);
+    setError(null);
+    const result = await sendCampaignNow(id);
+    if (!result.success) setError(result.error ?? "Could not send this campaign.");
     await load();
     setBusyId(null);
   }
 
   async function handleCancel(id: string) {
     setBusyId(id);
-    await cancelScheduledCampaign(id);
+    setError(null);
+    const result = await cancelScheduledCampaign(id);
+    if (!result.success) setError(result.error ?? "Could not cancel this campaign.");
     await load();
     setBusyId(null);
   }
@@ -65,7 +70,9 @@ export function CampaignsPanel({
   async function handleDelete(id: string) {
     if (!confirm("Delete this campaign? This can't be undone.")) return;
     setBusyId(id);
-    await deleteCampaign(id);
+    setError(null);
+    const result = await deleteCampaign(id);
+    if (!result.success) setError(result.error ?? "Could not delete this campaign.");
     await load();
     setBusyId(null);
   }
@@ -78,6 +85,12 @@ export function CampaignsPanel({
         </p>
         {canManage && <NewCampaignDialog onCreated={load} />}
       </div>
+
+      {error && (
+        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       <div className="overflow-hidden rounded-2xl border bg-card">
         <div className="overflow-x-auto">
@@ -153,14 +166,14 @@ export function CampaignsPanel({
                     <td className="px-4 py-3">
                       {canManage && (
                         <div className="flex items-center gap-2 text-xs">
-                          {c.status === "draft" && (
+                          {(c.status === "draft" || c.status === "failed") && (
                             <Button
                               size="sm"
                               variant="outline"
                               loading={busyId === c.id}
                               onClick={() => handleSendNow(c.id)}
                             >
-                              Send now
+                              {c.status === "failed" ? "Retry send" : "Send now"}
                             </Button>
                           )}
                           {c.status === "scheduled" && (
@@ -173,9 +186,15 @@ export function CampaignsPanel({
                               Cancel
                             </Button>
                           )}
+                          {c.status === "sending" && (
+                            <span className="text-muted-foreground">
+                              Sending — if this doesn't update after a minute, delete and recreate it.
+                            </span>
+                          )}
                           {(c.status === "draft" ||
                             c.status === "cancelled" ||
-                            c.status === "failed") && (
+                            c.status === "failed" ||
+                            c.status === "sending") && (
                             <button
                               className="text-destructive hover:underline"
                               onClick={() => handleDelete(c.id)}

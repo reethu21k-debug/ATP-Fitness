@@ -189,7 +189,7 @@ export async function dispatchCampaign(admin: AdminClient, campaignId: string): 
   const audience = await resolveCampaignAudience(admin, campaign);
 
   if (audience.length > 0) {
-    await admin.from("campaign_recipients").insert(
+    const { error: insertError } = await admin.from("campaign_recipients").insert(
       audience.map((r) => ({
         campaign_id: campaignId,
         gym_id: campaign.gym_id,
@@ -202,8 +202,23 @@ export async function dispatchCampaign(admin: AdminClient, campaignId: string): 
         status: "pending",
       }))
     );
+    // 23505 = unique violation on (campaign_id, member_id)/(campaign_id, lead_id)
+    // -- expected on a retry of a campaign that already has recipient rows
+    // from an earlier attempt (e.g. a prior timeout), since those people
+    // already have a row and don't need a fresh "pending" one. Any other
+    // error is unexpected and should stop the send rather than silently
+    // report "sent" with 0 recipients.
+    if (insertError && insertError.code !== "23505") {
+      await admin
+        .from("marketing_campaigns")
+        .update({ status: "failed" })
+        .eq("id", campaignId);
+      return { campaignId, error: `Could not create recipient list: ${insertError.message}` };
+    }
   }
 
+  // Pending rows created just now, PLUS any left "pending" from an earlier
+  // attempt that never got as far as sending them (e.g. a timeout mid-loop).
   const { data: recipients } = await admin
     .from("campaign_recipients")
     .select("*")
@@ -248,14 +263,29 @@ export async function dispatchCampaign(admin: AdminClient, campaignId: string): 
     }
   }
 
+  // Count sent/failed across ALL recipient rows for this campaign, not just
+  // the ones processed in this call -- on a retry after a previous partial
+  // run (e.g. a timeout), earlier successes are already "sent" in the table
+  // and must still be reflected in the campaign's totals.
+  const { count: totalSentCount } = await admin
+    .from("campaign_recipients")
+    .select("*", { count: "exact", head: true })
+    .eq("campaign_id", campaignId)
+    .eq("status", "sent");
+  const { count: totalFailedCount } = await admin
+    .from("campaign_recipients")
+    .select("*", { count: "exact", head: true })
+    .eq("campaign_id", campaignId)
+    .eq("status", "failed");
+
   await admin
     .from("marketing_campaigns")
     .update({
       status: "sent",
       sent_at: new Date().toISOString(),
       recipients_total: audience.length,
-      recipients_sent: sentCount,
-      recipients_failed: failedCount,
+      recipients_sent: totalSentCount ?? sentCount,
+      recipients_failed: totalFailedCount ?? failedCount,
     })
     .eq("id", campaignId);
 
