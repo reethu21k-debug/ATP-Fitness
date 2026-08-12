@@ -36,13 +36,13 @@ const ROSTER = [
 const LOAD_IN = [
   {
     plate: "25",
-    size: "h-36 w-36 sm:h-40 sm:w-40",
+    size: "h-28 w-28 sm:h-40 sm:w-40",
     step: "Book In",
     detail: "Walk in or fill out the contact form — we'll set up a facility tour and a free first session.",
   },
   {
     plate: "20",
-    size: "h-28 w-28 sm:h-32 sm:w-32",
+    size: "h-24 w-24 sm:h-32 sm:w-32",
     step: "Pick Your Plan",
     detail: "Choose monthly, quarterly, or annual tiers. Bolt on personal training or class packs anytime.",
   },
@@ -62,10 +62,10 @@ export default function HomePage() {
       {/* ================================================================ */}
       {/*  HERO — the opening whistle                                      */}
       {/* ================================================================ */}
-      <section className="relative overflow-hidden pt-20 pb-24 lg:pt-28 lg:pb-32">
-        <div className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-[550px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-[#E8262A]/15 via-[#F2B705]/5 to-transparent blur-[140px]" />
+      <section className="relative overflow-hidden pt-16 pb-16 sm:pt-20 sm:pb-24 lg:pt-28 lg:pb-32">
+        <div className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-[350px] w-[92vw] max-w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-[#E8262A]/15 via-[#F2B705]/5 to-transparent blur-[100px] sm:h-[550px] sm:blur-[140px]" />
 
-        <div className="container mx-auto px-6 text-center">
+        <div className="container mx-auto px-4 text-center sm:px-6">
           {/* Ticket-stub badge, torn edge via dashed border + notch shadows */}
           <div className="relative mx-auto inline-flex items-center gap-3 rounded-md border border-dashed border-[#F2B705]/50 bg-[#151518] px-5 py-2 font-eyebrow text-xs font-semibold uppercase text-[#F2B705]">
             <span className="relative flex h-2 w-2">
@@ -75,7 +75,7 @@ export default function HomePage() {
             Admit One — Free Trial Session
           </div>
 
-          <h1 className="font-display mx-auto mt-9 max-w-5xl text-6xl uppercase leading-[0.95] tracking-tight sm:text-7xl lg:text-8xl">
+          <h1 className="font-display mx-auto mt-9 max-w-5xl text-5xl uppercase leading-[0.95] tracking-tight sm:text-7xl lg:text-8xl">
             Train
             <span className="text-[#E8262A]"> Different.</span>
             <br />
@@ -85,7 +85,7 @@ export default function HomePage() {
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#A6A6AF] sm:text-xl">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#A6A6AF] sm:text-lg lg:text-xl">
             An uncompromising strength floor, high-octane group classes, and certified coaching — backed by a member app that logs every rep, meal, and milestone.
           </p>
 
@@ -114,17 +114,17 @@ export default function HomePage() {
           </p>
 
           {/* Scoreboard readout, standing in for a stats bar */}
-          <div className="mx-auto mt-16 max-w-4xl rounded-lg border border-white/10 bg-[#101012] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-2.5">
-              <span className="font-eyebrow text-[11px] uppercase text-[#6E6E7A]">ATP Fitness — Live Board</span>
-              <span className="flex items-center gap-1.5 font-mono-score text-[11px] text-[#F2B705]">
+          <div className="mx-auto mt-12 max-w-4xl rounded-lg border border-white/10 bg-[#101012] shadow-2xl sm:mt-16">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 sm:px-6">
+              <span className="font-eyebrow text-[10px] uppercase text-[#6E6E7A] sm:text-[11px]">ATP Fitness — Live Board</span>
+              <span className="flex items-center gap-1.5 font-mono-score text-[10px] text-[#F2B705] sm:text-[11px]">
                 <Timer className="h-3.5 w-3.5" /> Today
               </span>
             </div>
-            <div className="grid grid-cols-1 gap-6 divide-y divide-white/10 p-8 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div className="grid grid-cols-1 gap-6 divide-y divide-white/10 p-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:p-8">
               {SCOREBOARD.map((m) => (
                 <div key={m.label} className="flex flex-col items-center pt-6 first:pt-0 sm:pt-0">
-                  <p className="font-mono-score text-5xl font-bold tracking-tight text-[#E8262A] [text-shadow:0_0_20px_rgba(232,38,42,0.45)] sm:text-6xl">
+                  <p className="font-mono-score text-4xl font-bold tracking-tight text-[#E8262A] [text-shadow:0_0_20px_rgba(232,38,42,0.45)] sm:text-5xl lg:text-6xl">
                     {m.value}
                     <span className="text-2xl text-[#F5F3EE]/70 sm:text-3xl">{m.suffix}</span>
                   </p>
@@ -139,19 +139,19 @@ export default function HomePage() {
       {/* ================================================================ */}
       {/*  ROSTER — six lockers, six pre-designed image cards              */}
       {/* ================================================================ */}
-      <section className="relative border-t border-white/10 bg-[#0A0A0C] py-24">
-        <div className="container mx-auto px-6">
-          <div className="mx-auto mb-16 max-w-2xl text-center">
+      <section className="relative border-t border-white/10 bg-[#0A0A0C] py-16 sm:py-24">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-16">
             <div className="mb-3 font-eyebrow text-xs uppercase text-[#E8262A]">The ATP Roster</div>
-            <h2 className="font-display text-4xl uppercase tracking-tight sm:text-6xl">
+            <h2 className="font-display text-3xl uppercase tracking-tight sm:text-4xl lg:text-6xl">
               Everything On The Floor
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-[#A6A6AF]">
+            <p className="mt-4 text-sm leading-relaxed text-[#A6A6AF] sm:text-base">
               No fluff. World-class equipment, data-driven accountability, and coaching that shows up — filed six lockers deep.
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {ROSTER.map((f) => (
               <div
                 key={f.locker}
@@ -179,20 +179,20 @@ export default function HomePage() {
       {/* ================================================================ */}
       {/*  THE LOAD-IN — workflow as a barbell being loaded                */}
       {/* ================================================================ */}
-      <section className="relative border-y border-white/10 bg-[#111114] py-28">
-        <div className="container mx-auto px-6">
-          <div className="mx-auto mb-20 max-w-2xl text-center">
+      <section className="relative border-y border-white/10 bg-[#111114] py-16 sm:py-20 lg:py-28">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="mx-auto mb-12 max-w-2xl text-center sm:mb-20">
             <div className="mb-3 font-eyebrow text-xs uppercase text-[#F2B705]">The Load-In</div>
-            <h2 className="font-display text-4xl uppercase tracking-tight sm:text-5xl">
+            <h2 className="font-display text-3xl uppercase tracking-tight sm:text-4xl lg:text-5xl">
               Three Plates. Zero Friction.
             </h2>
-            <p className="mt-3 text-[#A6A6AF]">
+            <p className="mt-3 text-sm text-[#A6A6AF] sm:text-base">
               Same bar, heaviest step first — here's exactly what loading in looks like.
             </p>
           </div>
 
           {/* The bar */}
-          <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-16 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-12 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div className="pointer-events-none absolute left-0 right-0 top-1/2 hidden h-2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#3A3A42] via-[#54545C] to-[#3A3A42] sm:block" />
             <div className="pointer-events-none absolute left-1/2 top-0 h-full w-2 -translate-x-1/2 rounded-full bg-gradient-to-b from-[#3A3A42] via-[#54545C] to-[#3A3A42] sm:hidden" />
 
@@ -222,10 +222,10 @@ export default function HomePage() {
       {/* ================================================================ */}
       {/*  PR CARD — social proof as a personal-record chalkboard          */}
       {/* ================================================================ */}
-      <section className="container mx-auto px-6 py-24">
-        <Card className="relative overflow-hidden rounded-2xl border border-[#F2B705]/25 bg-[#131316] p-10 shadow-[0_0_60px_-20px_rgba(242,183,5,0.2)] sm:p-14">
+      <section className="container mx-auto px-4 py-16 sm:px-6 sm:py-24">
+        <Card className="relative overflow-hidden rounded-2xl border border-[#F2B705]/25 bg-[#131316] p-6 shadow-[0_0_60px_-20px_rgba(242,183,5,0.2)] sm:p-10 lg:p-14">
           {/* Diagonal PR stamp */}
-          <div className="absolute -right-10 -top-6 rotate-12 rounded-md border-2 border-[#E8262A] px-4 py-1 font-eyebrow text-sm font-bold uppercase tracking-widest text-[#E8262A] opacity-90">
+          <div className="absolute -right-6 -top-5 rotate-12 rounded-md border-2 border-[#E8262A] px-3 py-1 font-eyebrow text-xs font-bold uppercase tracking-widest text-[#E8262A] opacity-90 sm:-right-10 sm:-top-6 sm:px-4 sm:text-sm">
             New PR
           </div>
 
@@ -237,7 +237,7 @@ export default function HomePage() {
             </div>
 
             <div className="flex-1">
-              <blockquote className="font-eyebrow text-xl font-medium leading-relaxed text-[#F5F3EE] sm:text-2xl">
+              <blockquote className="font-eyebrow text-lg font-medium leading-relaxed text-[#F5F3EE] sm:text-xl lg:text-2xl">
                 &ldquo;Six months in and I&apos;ve dropped 8kg. My trainer adjusts my plan every two weeks based on what&apos;s actually working. The atmosphere here is unmatched.&rdquo;
               </blockquote>
 
@@ -269,8 +269,8 @@ export default function HomePage() {
       {/* ================================================================ */}
       {/*  FINAL CTA — on your marks, hazard-tape floor line               */}
       {/* ================================================================ */}
-      <section className="relative overflow-hidden pb-28 pt-10">
-        <div className="container mx-auto px-6">
+      <section className="relative overflow-hidden pb-16 pt-8 sm:pb-28 sm:pt-10">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="relative mx-auto max-w-4xl overflow-hidden rounded-2xl border border-white/15 bg-[#111114] shadow-2xl">
             {/* Hazard-stripe floor tape along the top edge */}
             <div
@@ -280,14 +280,14 @@ export default function HomePage() {
                   "repeating-linear-gradient(135deg, #F2B705 0 14px, #0A0A0C 14px 28px)",
               }}
             />
-            <div className="relative p-10 text-center sm:p-16">
+            <div className="relative p-6 text-center sm:p-10 lg:p-16">
               <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(232,38,42,0.18),transparent_70%)]" />
 
               <div className="mb-3 font-eyebrow text-xs uppercase text-[#F2B705]">On Your Marks</div>
-              <h2 className="font-display text-4xl uppercase tracking-tight sm:text-6xl">
+              <h2 className="font-display text-3xl uppercase tracking-tight sm:text-4xl lg:text-6xl">
                 Ready To Commit?
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#A6A6AF]">
+              <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#A6A6AF] sm:text-base">
                 Step onto the floor for a free trial session. Test the equipment, feel the culture, meet your future coaches — zero pressure.
               </p>
 
