@@ -8,16 +8,27 @@ birthday/festival offers for GymOS.
 | Area | Where |
 |---|---|
 | Schema, RLS, permission matrix, views | `supabase/migrations/0016_marketing.sql` |
-| Cron scheduling | `supabase/migrations/0017_schedule_marketing_automation.sql` |
-| Daily birthday/festival automation | `supabase/functions/marketing-automation/index.ts` |
-| Campaign sending (send-now + scheduled sweep) | `supabase/functions/campaign-dispatch/index.ts` |
-| Server Actions | `lib/actions/marketing.actions.ts` |
+| Cron scheduling (SMTP routes) | `supabase/migrations/0024_marketing_smtp_dispatch.sql` |
+| Shared send logic (SMTP, not Resend) | `lib/services/marketing-dispatch.ts` |
+| Daily birthday/festival automation | `app/api/cron/marketing-automation/route.ts` |
+| Campaign sending (scheduled sweep) | `app/api/marketing/campaign-dispatch/route.ts` |
+| Server Actions (incl. send-now) | `lib/actions/marketing.actions.ts` |
 | Pure/testable business logic | `lib/utils/marketing-helpers.ts` |
 | Types | `types/database.ts` (Part 10 section) |
 | UI | `components/features/marketing/*` |
 | Routes | `app/dashboard/owner/marketing`, `app/dashboard/reception/marketing` |
 | Tracking routes | `app/api/marketing/track/open`, `app/api/marketing/track/click` |
 | Tests | `tests/unit/marketing-helpers.test.ts` |
+
+> **Email transport**: all Marketing email (campaigns, coupons, referrals,
+> birthday wishes, festival offers) sends through the exact same Gmail SMTP
+> transport as subscription and welcome emails — `sendEmail()` in
+> `lib/services/email.ts`. Marketing does **not** call Resend and does not
+> have its own email provider. The original design used two Resend-based
+> Supabase Edge Functions (`campaign-dispatch`, `marketing-automation`);
+> those have been deleted and replaced with Next.js API routes for the same
+> reason `renewal-reminders` was moved off an Edge Function in Part 6 —
+> nodemailer needs the Node runtime, which Deno Edge Functions don't provide.
 
 ## Setup
 
@@ -27,56 +38,47 @@ birthday/festival offers for GymOS.
 supabase db push
 ```
 
-This applies `0016_marketing.sql` and `0017_schedule_marketing_automation.sql`
-on top of Parts 1–9. No new environment variables are required — Part 10
-reuses the `RESEND_API_KEY` / `EMAIL_FROM` and `TWILIO_ACCOUNT_SID` /
-`TWILIO_AUTH_TOKEN` / `TWILIO_WHATSAPP_FROM` variables already configured in
-Part 4/6.
+This applies `0016_marketing.sql` and `0024_marketing_smtp_dispatch.sql` on
+top of Parts 1–9. No Resend account or `RESEND_API_KEY` is needed — Marketing
+reuses the `GMAIL_SMTP_USER` / `GMAIL_SMTP_APP_PASSWORD` / `EMAIL_FROM_NAME`
+variables already configured for subscription/welcome emails, plus the
+`TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_WHATSAPP_FROM` variables
+for the WhatsApp channel.
 
-### 2. Deploy the two new Edge Functions
+### 2. Replace the placeholders in migration 0024
 
-```bash
-supabase functions deploy marketing-automation
-supabase functions deploy campaign-dispatch
-```
-
-Both expect the same secrets as the existing functions:
-
-```bash
-supabase secrets set CRON_SECRET=<your-secret>
-supabase secrets set RESEND_API_KEY=<your-resend-key>
-supabase secrets set EMAIL_FROM="GymOS <no-reply@yourdomain.com>"
-supabase secrets set TWILIO_ACCOUNT_SID=<your-twilio-sid>
-supabase secrets set TWILIO_AUTH_TOKEN=<your-twilio-token>
-supabase secrets set TWILIO_WHATSAPP_FROM=<your-twilio-whatsapp-number>
-supabase secrets set NEXT_PUBLIC_APP_URL=https://yourapp.vercel.app
-```
-
-### 3. Replace the placeholders in migration 0017
-
-Before running `0017_schedule_marketing_automation.sql`, replace
-`<PROJECT_REF>` and `<CRON_SECRET>` in both `cron.schedule(...)` calls, the
-same way migration `0006` was handled in Part 4.
+Before running `0024_marketing_smtp_dispatch.sql`, replace `<APP_URL>` and
+`<CRON_SECRET>` in both `cron.schedule(...)` calls — same `CRON_SECRET` as in
+your `.env`, same pattern as `app/api/cron/renewal-reminders` (migration
+`0021`). No Edge Function deploy step is needed; the two routes ship as part
+of the normal Next.js app.
 
 ## How sending works
 
 - **Manual, send-now campaigns**: `createCampaign({ sendNow: true })` in
-  `marketing.actions.ts` calls `dispatchCampaignNow()`, which invokes the
-  `campaign-dispatch` Edge Function directly with the new campaign's id.
+  `marketing.actions.ts` calls `dispatchCampaignNow()`, which calls
+  `dispatchCampaign()` from `lib/services/marketing-dispatch.ts` directly, in
+  the same Node process — no HTTP round trip.
 - **Scheduled campaigns**: saved with `status: "scheduled"` and a
-  `scheduled_at` timestamp. A cron job hits `campaign-dispatch` with an empty
-  body every minute; the function sweeps for any campaign whose
-  `scheduled_at` has passed and sends it.
-- Either way, `campaign-dispatch` resolves the audience, writes one
+  `scheduled_at` timestamp. A cron job hits
+  `POST /api/marketing/campaign-dispatch` with an empty body every minute;
+  the route sweeps for any campaign whose `scheduled_at` has passed and
+  sends it.
+- Either way, `dispatchCampaign()` resolves the audience, writes one
   `campaign_recipients` row per person (a unique index prevents the same
   person ever being inserted twice for the same campaign, so a re-run is
-  always safe), sends via Resend/Twilio, and updates both the recipient row
-  and the campaign's aggregate counters.
+  always safe), sends email via `sendEmail()` (Gmail SMTP) and WhatsApp via
+  Twilio, and updates both the recipient row and the campaign's aggregate
+  counters (`recipients_sent`, `recipients_failed`, `status`). Each
+  recipient's `error_message` holds the actual SMTP failure reason when a
+  send fails, and open/click tracking (`opens_count`, `clicks_count`, the
+  `campaign_analytics` view's `open_rate`/`click_rate`) is unaffected —
+  those come from the tracking pixel/redirect routes, not the transport.
 
 ## How automation works
 
-`marketing-automation` runs once daily (07:30 UTC) and handles two
-independent jobs:
+`GET /api/cron/marketing-automation` runs once daily (07:30 UTC) and handles
+two independent jobs:
 
 1. **Birthday wishes** — for every gym with `birthday_campaign_config.is_enabled
    = true`, finds active members whose `date_of_birth` matches today's
@@ -88,8 +90,9 @@ independent jobs:
 Both jobs insert a row into `automated_message_log` (unique on
 `gym_id, member_id, automation_type, sent_on`) **before** sending. If that
 insert fails with a unique-violation, the message was already sent today and
-the loop skips ahead — this makes the whole function safe to re-run or
-re-trigger without ever double-messaging someone.
+the loop skips ahead — this makes the whole route safe to re-run or
+re-trigger without ever double-messaging someone. Email sends go through the
+same `sendEmail()` SMTP transport as everything else in Marketing.
 
 ## Coupons
 

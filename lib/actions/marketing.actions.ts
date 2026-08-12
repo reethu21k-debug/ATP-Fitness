@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getCurrentProfile, requirePermission, requireRole, PermissionError } from "@/lib/utils/permissions";
 import { computeDiscountAmount } from "@/lib/utils/marketing-helpers";
+import { dispatchCampaign } from "@/lib/services/marketing-dispatch";
 import type { ActionResult } from "./auth.actions";
 import type {
   CampaignChannel,
@@ -86,27 +87,20 @@ export async function createCampaign(input: CreateCampaignInput): Promise<Action
   return { success: true, data: { campaignId: campaign.id } };
 }
 
-/** Invokes the campaign-dispatch Edge Function for an immediate send. */
+/**
+ * Sends a campaign immediately, in-process, through the same Gmail SMTP
+ * transport used for subscription/welcome emails (lib/services/email.ts).
+ * No Resend, no separate Edge Function -- see lib/services/marketing-dispatch.ts.
+ */
 async function dispatchCampaignNow(campaignId: string): Promise<ActionResult> {
-  const functionsUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL.replace(".supabase.co", ".functions.supabase.co")}`
-    : null;
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!functionsUrl || !cronSecret) {
-    return { success: false, error: "Campaign sending isn't configured (missing Supabase Functions URL or CRON_SECRET)." };
-  }
-
   try {
-    const res = await fetch(`${functionsUrl}/campaign-dispatch`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-cron-secret": cronSecret },
-      body: JSON.stringify({ campaignId }),
-    });
-    if (!res.ok) return { success: false, error: `Dispatch failed (${res.status}).` };
+    const admin = createAdminClient();
+    const result = await dispatchCampaign(admin, campaignId);
+    if (result.error) return { success: false, error: result.error };
     return { success: true };
-  } catch {
-    return { success: false, error: "Could not reach the sending service. The campaign was saved as a draft." };
+  } catch (err) {
+    console.error(`marketing: dispatchCampaignNow failed for campaign ${campaignId}:`, err);
+    return { success: false, error: "Could not send this campaign. Check the server logs for details." };
   }
 }
 
