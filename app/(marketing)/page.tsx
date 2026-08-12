@@ -1,20 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { BannerCarousel } from "@/components/features/marketing/banner-carousel";
 import {
-  QrCode,
-  Dumbbell,
-  Wallet,
-  Users,
-  Target,
-  TrendingUp,
   ArrowRight,
   CheckCircle2,
   Quote,
   Flame,
   Timer,
 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 /* ---------------------------------------------------------------------- */
 /*  Content                                                                */
@@ -27,44 +22,14 @@ const SCOREBOARD = [
   { value: "18", suffix: "HR", label: "Open daily · 5AM – 11PM" },
 ];
 
-// Roster grid — six lockers, six reasons to walk in.
+// Roster grid — six lockers, six pre-designed cards (image-based).
 const ROSTER = [
-  {
-    locker: "01",
-    icon: Dumbbell,
-    title: "Strength & Conditioning Floor",
-    desc: "Full range of free weights, plate-loaded machines, and functional rigs engineered for serious lifters.",
-  },
-  {
-    locker: "02",
-    icon: Users,
-    title: "High-Energy Group Classes",
-    desc: "HIIT, spin, yoga, and Zumba on a rotating weekly schedule — unlimited and included in every membership.",
-  },
-  {
-    locker: "03",
-    icon: Target,
-    title: "Elite Personal Training",
-    desc: "1-on-1 coaching with certified specialists, built entirely around your biomechanics, goals, and schedule.",
-  },
-  {
-    locker: "04",
-    icon: QrCode,
-    title: "Instant QR Check-In",
-    desc: "Tap in seamlessly at the front desk. Your attendance streak and logs update in the ATP app instantly.",
-  },
-  {
-    locker: "05",
-    icon: Wallet,
-    title: "Transparent, Simple Billing",
-    desc: "Cash, UPI, or card. Smart renewal reminders before your plan lapses so you never eat a hidden fee.",
-  },
-  {
-    locker: "06",
-    icon: TrendingUp,
-    title: "Data-Driven Progress",
-    desc: "Custom workout plans, macro-calculated diet charts, and body-composition history in one place.",
-  },
+  { locker: "01", image: "/Home/Card1.png", alt: "Strength & Conditioning Floor" },
+  { locker: "02", image: "/Home/Card2.png", alt: "Cardio Zone" },
+  { locker: "03", image: "/Home/Card3.png", alt: "Elite Personal Training" },
+  { locker: "04", image: "/Home/Card4.png", alt: "Instant QR Check-In" },
+  { locker: "05", image: "/Home/Card5.png", alt: "Transparent, Simple Billing" },
+  { locker: "06", image: "/Home/Card6.png", alt: "Data-Driven Progress" },
 ];
 
 // The load-in — three plates loaded onto the bar, heaviest to lightest.
@@ -172,7 +137,7 @@ export default function HomePage() {
       </section>
 
       {/* ================================================================ */}
-      {/*  ROSTER — six lockers, six reasons                               */}
+      {/*  ROSTER — six lockers, six pre-designed image cards              */}
       {/* ================================================================ */}
       <section className="relative border-t border-white/10 bg-[#0A0A0C] py-24">
         <div className="container mx-auto px-6">
@@ -188,25 +153,24 @@ export default function HomePage() {
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {ROSTER.map((f) => (
-              <Card
+              <div
                 key={f.locker}
-                className="group relative overflow-hidden rounded-lg border border-white/10 bg-[#131316] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#E8262A]/50 hover:shadow-[0_12px_35px_-10px_rgba(232,38,42,0.25)]"
+                className="group relative aspect-[3/2] overflow-hidden rounded-xl border border-white/10 bg-[#131316] shadow-[0_8px_30px_-12px_rgba(0,0,0,0.6)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#E8262A]/50 hover:shadow-[0_18px_40px_-12px_rgba(232,38,42,0.3)]"
               >
-                {/* Locker tag */}
-                <div className="absolute right-0 top-0 rounded-bl-lg border-b border-l border-white/10 bg-[#0A0A0C] px-3 py-1 font-mono-score text-xs text-[#6E6E7A] group-hover:text-[#F2B705]">
-                  LKR·{f.locker}
-                </div>
-
-                <CardContent className="p-8">
-                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-md border border-white/10 bg-[#0A0A0C] text-[#E8262A] transition-transform duration-300 group-hover:scale-110 group-hover:border-[#E8262A]/40">
-                    <f.icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-eyebrow text-lg font-semibold uppercase tracking-wide text-[#F5F3EE] group-hover:text-[#F2B705] transition-colors">
-                    {f.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[#8E8E9A]">{f.desc}</p>
-                </CardContent>
-              </Card>
+                <Image
+                  src={f.image}
+                  alt={f.alt}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  // Slight overscale + centered crop trims the source PNG's
+                  // own dark margin so no letterboxing/black bars show inside
+                  // the rounded card frame.
+                  className="scale-[1.06] object-cover object-center"
+                  priority={f.locker === "01"}
+                />
+                {/* subtle inner ring so the crop edge always reads intentional */}
+                <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10 group-hover:ring-[#E8262A]/40" />
+              </div>
             ))}
           </div>
         </div>
