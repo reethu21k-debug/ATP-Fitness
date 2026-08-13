@@ -47,18 +47,6 @@ export function BannerCarousel() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Local keyframes for the autoplay progress underline on the active tab */}
-      <style jsx>{`
-        @keyframes carousel-progress {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
-        }
-        .progress-fill {
-          animation: carousel-progress ${AUTOPLAY_MS}ms linear forwards;
-          animation-play-state: ${paused ? "paused" : "running"};
-        }
-      `}</style>
-
       <div className="relative aspect-[3/1] w-full">
         {BANNERS.map((banner, i) => {
           const content = (
@@ -119,37 +107,6 @@ export function BannerCarousel() {
             >
               <ChevronRight className="h-5 w-5" />
             </button>
-
-            {/* Plate tabs — numbered like the load-in sets, each with its own progress underline */}
-            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 overflow-x-auto max-w-[90%] px-1">
-              {BANNERS.map((banner, i) => (
-                <button
-                  key={banner.src}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  aria-label={`Go to banner ${i + 1}`}
-                  className={`group relative flex h-7 w-9 shrink-0 items-center justify-center overflow-hidden rounded-sm border transition-all ${
-                    i === index
-                      ? "border-[#E8262A] bg-[#0A0A0C]/90"
-                      : "border-white/20 bg-[#0A0A0C]/60 hover:border-white/40"
-                  }`}
-                >
-                  <span
-                    className={`font-mono-score text-[10px] font-semibold ${
-                      i === index ? "text-[#F2B705]" : "text-[#F5F3EE]/50"
-                    }`}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  {i === index && (
-                    <span
-                      key={`${index}-progress`}
-                      className="progress-fill absolute inset-x-0 bottom-0 h-[3px] origin-left bg-[#E8262A]"
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
           </>
         )}
       </div>

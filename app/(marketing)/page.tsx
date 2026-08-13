@@ -7,20 +7,12 @@ import {
   CheckCircle2,
   Quote,
   Flame,
-  Timer,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 /* ---------------------------------------------------------------------- */
 /*  Content                                                                */
 /* ---------------------------------------------------------------------- */
-
-// Scoreboard readout — three numbers, read like a gym's digital clock.
-const SCOREBOARD = [
-  { value: "500", suffix: "+", label: "Athletes training with us" },
-  { value: "12", suffix: "", label: "Coaches on the floor" },
-  { value: "18", suffix: "HR", label: "Open daily · 5AM – 11PM" },
-];
 
 // Roster grid — six lockers, six pre-designed cards (image-based).
 const ROSTER = [
@@ -112,27 +104,6 @@ export default function HomePage() {
           <p className="mt-5 font-eyebrow text-xs uppercase text-[#6E6E7A]">
             No joining fee this month · Drop in anytime for a guided tour
           </p>
-
-          {/* Scoreboard readout, standing in for a stats bar */}
-          <div className="mx-auto mt-12 max-w-4xl rounded-lg border border-white/10 bg-[#101012] shadow-2xl sm:mt-16">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 sm:px-6">
-              <span className="font-eyebrow text-[10px] uppercase text-[#6E6E7A] sm:text-[11px]">ATP Fitness — Live Board</span>
-              <span className="flex items-center gap-1.5 font-mono-score text-[10px] text-[#F2B705] sm:text-[11px]">
-                <Timer className="h-3.5 w-3.5" /> Today
-              </span>
-            </div>
-            <div className="grid grid-cols-1 gap-6 divide-y divide-white/10 p-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:p-8">
-              {SCOREBOARD.map((m) => (
-                <div key={m.label} className="flex flex-col items-center pt-6 first:pt-0 sm:pt-0">
-                  <p className="font-mono-score text-4xl font-bold tracking-tight text-[#E8262A] [text-shadow:0_0_20px_rgba(232,38,42,0.45)] sm:text-5xl lg:text-6xl">
-                    {m.value}
-                    <span className="text-2xl text-[#F5F3EE]/70 sm:text-3xl">{m.suffix}</span>
-                  </p>
-                  <p className="mt-2 text-center font-eyebrow text-xs uppercase text-[#8E8E9A]">{m.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
