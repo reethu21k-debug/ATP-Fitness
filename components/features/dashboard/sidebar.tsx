@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Dumbbell, Wallet, QrCode, Boxes, Megaphone,
   FileBarChart, Settings, Building2, ShieldCheck, MessagesSquare, Calendar,
-  Salad, TrendingUp, Ticket, Sparkles, Calculator, X, UserPlus,
+  Salad, TrendingUp, Ticket, Sparkles, Calculator, X, UserPlus, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { AppRole } from "@/types/database";
@@ -28,6 +28,7 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
     { href: "/dashboard/owner", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/owner/branches", label: "Branches", icon: Building2 },
     { href: "/dashboard/owner/members", label: "Members", icon: Users },
+    { href: "/dashboard/owner/renewals", label: "Renewals", icon: Clock },
     { href: "/dashboard/owner/crm", label: "Leads & CRM", icon: Ticket },
     { href: "/dashboard/owner/payments", label: "Payments", icon: Wallet },
     { href: "/dashboard/owner/trainers", label: "Trainers", icon: Dumbbell },
@@ -55,6 +56,7 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
     { href: "/dashboard/trainer", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/trainer/clients", label: "My Clients", icon: Users },
     { href: "/dashboard/trainer/members/new", label: "Add Member", icon: UserPlus },
+    { href: "/dashboard/trainer/renewals", label: "Renewals", icon: Clock },
     { href: "/dashboard/trainer/attendance", label: "Attendance", icon: QrCode },
     { href: "/dashboard/trainer/chat", label: "Chat", icon: MessagesSquare },
   ],

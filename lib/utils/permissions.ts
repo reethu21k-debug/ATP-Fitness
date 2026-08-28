@@ -38,6 +38,19 @@ export async function requireRole(...roles: AppRole[]) {
   return profile;
 }
 
+/** Read-only permission check — like requirePermission but returns a boolean
+ *  instead of throwing, for UI code that wants to conditionally render an
+ *  action rather than let a user click into a guaranteed-to-fail attempt. */
+export async function hasPermission(resource: string, action: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("has_permission", {
+    p_resource: resource,
+    p_action: action,
+  });
+  if (error) return false;
+  return Boolean(data);
+}
+
 export async function getCurrentProfile() {
   const supabase = await createClient();
   const {

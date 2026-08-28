@@ -394,6 +394,50 @@ export async function deleteMember(memberId: string): Promise<ActionResult> {
 // ============================================================================
 // FORM OPTIONS — plans + trainers for the add/edit member form selects
 // ============================================================================
+// ============================================================================
+// RENEWALS — members expiring within the next N days, and already-expired
+// members. Owner and Trainer dashboards both use this (RLS already scopes
+// trainers and owners to their own gym via is_staff() + gym_id checks on the
+// underlying tables, so no extra role branching is needed here).
+// ============================================================================
+export interface ListExpiringMembersParams {
+  window: "expiring_soon" | "expired";
+  page: number;
+  pageSize: number;
+  search?: string;
+  /** Only used for "expiring_soon" — how many days out counts as "soon". Defaults to 10. */
+  withinDays?: number;
+}
+
+export async function listExpiringMembers(params: ListExpiringMembersParams) {
+  const supabase = await createClient();
+  const { window, page, pageSize, search, withinDays = 10 } = params;
+
+  let query = supabase
+    .from("members_overview")
+    .select("*", { count: "exact" })
+    .not("membership_id", "is", null);
+
+  query =
+    window === "expiring_soon"
+      ? query.gte("days_until_expiry", 0).lte("days_until_expiry", withinDays)
+      : query.lt("days_until_expiry", 0);
+
+  if (search) {
+    query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+  }
+
+  query = query
+    // Soonest-to-expire first when upcoming; most-recently-expired first when overdue.
+    .order("days_until_expiry", { ascending: window === "expiring_soon" })
+    .range((page - 1) * pageSize, page * pageSize - 1);
+
+  const { data, count, error } = await query;
+  if (error) throw new Error(error.message);
+
+  return { rows: data ?? [], total: count ?? 0 };
+}
+
 export async function getMemberFormOptions() {
   const supabase = await createClient();
   const actor = await getCurrentProfile();
