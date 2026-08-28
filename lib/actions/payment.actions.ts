@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requirePermission, requireRole, getCurrentProfile, PermissionError } from "@/lib/utils/permissions";
 import { sendEmail, subscriptionConfirmationEmailHtml, subscriptionConfirmationEmailText } from "@/lib/services/email";
+import { sendSubscriptionConfirmationWhatsApp } from "@/lib/services/whatsapp-cloud";
 import { generateInvoicePdfBuffer } from "@/lib/services/invoice-pdf";
 import { uploadBufferToCloudinary } from "@/lib/services/cloudinary";
 import { buildInvoiceDownloadUrl } from "@/lib/services/invoice-links";
@@ -128,7 +129,7 @@ export async function recordPayment(input: RecordPaymentInput): Promise<ActionRe
     const admin = createAdminClient();
 
     const [{ data: member }, { data: gymDetails }] = await Promise.all([
-      admin.from("profiles").select("full_name, email").eq("id", input.memberId).single(),
+      admin.from("profiles").select("full_name, email, phone").eq("id", input.memberId).single(),
       admin.from("gyms").select("name, address, city, phone, email").eq("id", actor.gym_id).single(),
     ]);
 
@@ -198,6 +199,20 @@ export async function recordPayment(input: RecordPaymentInput): Promise<ActionRe
           paymentMethod: input.method,
           invoiceUrl,
         }),
+      });
+    }
+
+    // WhatsApp confirmation via Meta's Cloud API — best-effort, mirrors the
+    // email confirmation above and never fails the payment itself.
+    if (member?.phone) {
+      await sendSubscriptionConfirmationWhatsApp({
+        phone: member.phone,
+        memberName: member.full_name ?? "there",
+        gymName: gymDetails?.name ?? "your gym",
+        planName: planName ?? "Membership",
+        durationDays: membershipDurationDays,
+        startDate: membershipStartDate ?? payment.created_at,
+        endDate: membershipEndDate ?? payment.created_at,
       });
     }
   } catch (invoiceErr) {

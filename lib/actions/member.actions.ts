@@ -310,6 +310,7 @@ export async function createMember(input: MemberFormInput): Promise<ActionResult
 
   revalidatePath("/dashboard/owner/members");
   revalidatePath("/dashboard/reception/members");
+  revalidatePath("/dashboard/trainer/clients");
   return { success: true, data: { memberId } };
 }
 

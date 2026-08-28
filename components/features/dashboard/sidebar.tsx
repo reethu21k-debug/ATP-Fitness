@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Dumbbell, Wallet, QrCode, Boxes, Megaphone,
   FileBarChart, Settings, Building2, ShieldCheck, MessagesSquare, Calendar,
-  Salad, TrendingUp, Ticket, Sparkles, Calculator, X,
+  Salad, TrendingUp, Ticket, Sparkles, Calculator, X, UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { AppRole } from "@/types/database";
@@ -54,6 +54,7 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
   trainer: [
     { href: "/dashboard/trainer", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/trainer/clients", label: "My Clients", icon: Users },
+    { href: "/dashboard/trainer/members/new", label: "Add Member", icon: UserPlus },
     { href: "/dashboard/trainer/attendance", label: "Attendance", icon: QrCode },
     { href: "/dashboard/trainer/chat", label: "Chat", icon: MessagesSquare },
   ],
@@ -148,4 +149,3 @@ export function DashboardMobileNav({ role, open, onClose }: { role: AppRole; ope
     </div>
   );
 }
-

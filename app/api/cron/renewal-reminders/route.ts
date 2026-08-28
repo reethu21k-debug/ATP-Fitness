@@ -7,6 +7,7 @@ import {
   renewalReminderEmailSubject,
   type RenewalReminderKind,
 } from "@/lib/services/email";
+import { sendSubscriptionExpiredWhatsApp } from "@/lib/services/whatsapp-cloud";
 import type { ReminderType } from "@/types/database";
 
 // Node runtime -- nodemailer (the Gmail SMTP transport used everywhere else
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
     const { data: memberships, error } = await admin
       .from("member_memberships")
       .select(
-        "id, end_date, profiles:member_id(full_name, email), gyms:gym_id(name), membership_plans:plan_id(name)"
+        "id, end_date, profiles:member_id(full_name, email, phone), gyms:gym_id(name), membership_plans:plan_id(name)"
       )
       .eq("is_current", true)
       .eq("end_date", targetDate);
@@ -80,41 +81,63 @@ export async function GET(req: NextRequest) {
         .maybeSingle();
       if (existing) continue;
 
-      const member = m.profiles as unknown as { full_name: string; email: string | null } | null;
+      const member = m.profiles as unknown as { full_name: string; email: string | null; phone: string | null } | null;
       const gym = m.gyms as unknown as { name: string } | null;
       const plan = m.membership_plans as unknown as { name: string } | null;
-      if (!member?.email) continue;
+      if (!member || (!member.email && !member.phone)) continue;
 
       const gymName = gym?.name ?? "your gym";
+      const planName = plan?.name ?? "Membership";
       const daysUntilExpiry = window.kind === "on_expiry" ? 0 : window.offsetDays;
 
-      const emailResult = await sendEmail({
-        to: member.email,
-        subject: renewalReminderEmailSubject({ gymName, kind: window.kind, daysUntilExpiry }),
-        html: renewalReminderEmailHtml({
-          memberName: member.full_name,
-          gymName,
-          planName: plan?.name ?? "Membership",
-          endDate: m.end_date,
-          kind: window.kind,
-          daysUntilExpiry,
-          membershipUrl: `${appUrl}/dashboard/member/membership`,
-        }),
-        text: renewalReminderEmailText({
-          memberName: member.full_name,
-          gymName,
-          planName: plan?.name ?? "Membership",
-          endDate: m.end_date,
-          kind: window.kind,
-          daysUntilExpiry,
-          membershipUrl: `${appUrl}/dashboard/member/membership`,
-        }),
-      });
+      let sentAny = false;
 
-      if (!emailResult.success) {
-        console.error(`renewal-reminders: send failed for membership ${m.id}:`, emailResult);
-        continue;
+      if (member.email) {
+        const emailResult = await sendEmail({
+          to: member.email,
+          subject: renewalReminderEmailSubject({ gymName, kind: window.kind, daysUntilExpiry }),
+          html: renewalReminderEmailHtml({
+            memberName: member.full_name,
+            gymName,
+            planName,
+            endDate: m.end_date,
+            kind: window.kind,
+            daysUntilExpiry,
+            membershipUrl: `${appUrl}/dashboard/member/membership`,
+          }),
+          text: renewalReminderEmailText({
+            memberName: member.full_name,
+            gymName,
+            planName,
+            endDate: m.end_date,
+            kind: window.kind,
+            daysUntilExpiry,
+            membershipUrl: `${appUrl}/dashboard/member/membership`,
+          }),
+        });
+
+        if (!emailResult.success) {
+          console.error(`renewal-reminders: send failed for membership ${m.id}:`, emailResult);
+        } else {
+          sentAny = true;
+        }
       }
+
+      // WhatsApp via Meta's Cloud API — only for the day-of-expiry window,
+      // asking the member to renew. Best-effort: doesn't block the email path.
+      if (window.kind === "on_expiry" && member.phone) {
+        const whatsappResult = await sendSubscriptionExpiredWhatsApp({
+          phone: member.phone,
+          memberName: member.full_name,
+          gymName,
+          planName,
+          endDate: m.end_date,
+          renewUrl: `${appUrl}/dashboard/member/membership`,
+        });
+        if (whatsappResult.success) sentAny = true;
+      }
+
+      if (!sentAny) continue;
 
       await admin.from("renewal_reminder_log").insert({ membership_id: m.id, reminder_type: window.type });
       sentCount++;

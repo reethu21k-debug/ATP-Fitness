@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getMyClients } from "@/lib/actions/trainer.actions";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { MemberStatusBadge } from "@/components/features/members/status-badge";
+import { UserPlus } from "lucide-react";
 
 export const metadata = { title: "My Clients — ATP Fitness" };
 
@@ -10,9 +12,17 @@ export default async function TrainerClientsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">My Clients</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Members assigned to you — plans, diet, and progress.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">My Clients</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Members assigned to you — plans, diet, and progress.</p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/trainer/members/new">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Member
+          </Link>
+        </Button>
       </div>
 
       {clients.length === 0 ? (
