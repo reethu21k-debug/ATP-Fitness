@@ -1,17 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dumbbell, Users, HeartPulse, Utensils, QrCode, MessagesSquare,
-  Boxes, ShowerHead, ParkingCircle, ShieldCheck, Trophy, Smartphone,
+  Dumbbell, HeartPulse, Utensils, QrCode, MessagesSquare,
+  ShieldCheck, Trophy, Smartphone,
 } from "lucide-react";
 
 const MODULES = [
   {
     icon: Dumbbell, title: "Strength floor",
     items: ["Free weights, plate-loaded machines & racks", "Olympic lifting platforms", "Functional training rig & turf"],
-  },
-  {
-    icon: Users, title: "Group classes",
-    items: ["HIIT & functional circuits", "Yoga & mobility", "Spin & Zumba", "New weekly schedule, posted every Monday"],
   },
   {
     icon: HeartPulse, title: "Personal training",
@@ -28,18 +24,6 @@ const MODULES = [
   {
     icon: MessagesSquare, title: "Trainer chat",
     items: ["Message your trainer directly", "Get plan updates & feedback in-app"],
-  },
-  {
-    icon: Boxes, title: "Pro shop",
-    items: ["Supplements, shakers & gym accessories", "Member pricing on select brands"],
-  },
-  {
-    icon: ShowerHead, title: "Amenities",
-    items: ["Locker rooms & showers", "Filtered water stations", "Air-conditioned floor"],
-  },
-  {
-    icon: ParkingCircle, title: "Convenience",
-    items: ["On-site parking", "Open 5 AM – 11 PM, every day"],
   },
   {
     icon: ShieldCheck, title: "Safety",
@@ -63,7 +47,7 @@ export default function FeaturesPage() {
       <div className="mx-auto mb-16 max-w-2xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight">Everything you need to train, in one place</h1>
         <p className="mt-4 text-muted-foreground">
-          A full strength floor, group classes, personal coaching, and a members app to track it all.
+          A full strength floor, personal coaching, and a members app to track it all.
         </p>
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

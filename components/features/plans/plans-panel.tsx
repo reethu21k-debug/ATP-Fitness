@@ -9,10 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlanDialog } from "./plan-dialog";
 import { listMembershipPlans, setMembershipPlanActive, type MembershipPlanRow } from "@/lib/actions/plans.actions";
-
-function formatPrice(price: number) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
-}
+import { formatINR } from "@/lib/utils/format";
 
 function PlanRow({ plan, onSaved }: { plan: MembershipPlanRow; onSaved: () => void }) {
   const [toggling, setToggling] = useState(false);
@@ -32,7 +29,7 @@ function PlanRow({ plan, onSaved }: { plan: MembershipPlanRow; onSaved: () => vo
           {!plan.is_active && <Badge variant="secondary">Inactive</Badge>}
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {formatPrice(plan.price)} · {plan.duration_days} days
+          {formatINR(plan.price)} · {plan.duration_days} days
           {plan.description ? ` · ${plan.description}` : ""}
         </p>
       </div>

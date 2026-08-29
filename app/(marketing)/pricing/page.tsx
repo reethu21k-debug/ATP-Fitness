@@ -3,24 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatINR } from "@/lib/utils/format";
+import { getPublicMembershipPlans } from "@/lib/services/public-plans";
 
-const PLANS = [
-  {
-    name: "Monthly", price: "₹1,999", period: "/month", branches: "Full gym access, no lock-in",
-    features: ["Strength floor & cardio zone", "All group classes", "1 free trainer assessment", "QR check-in & members app"],
-    highlighted: false,
-  },
-  {
-    name: "Quarterly", price: "₹4,999", period: "/3 months", branches: "Best for building a habit",
-    features: ["Everything in Monthly", "1 free personal training session/month", "Diet plan from a staff trainer", "Priority class booking"],
-    highlighted: true,
-  },
-  {
-    name: "Annual", price: "₹16,999", period: "/year", branches: "Our best value plan",
-    features: ["Everything in Quarterly", "2 free PT sessions/month", "Free supplement starter kit", "1 free guest pass/month"],
-    highlighted: false,
-  },
-];
+// Universal perks true of every plan regardless of tier -- kept generic
+// (rather than per-plan bullet lists) since only name/price/duration/
+// description are owner-editable today; a per-plan feature checklist would
+// either need hardcoding (which silently goes stale as plans change) or a
+// schema/admin-UI addition to make it truly owner-editable too.
+const UNIVERSAL_FEATURES = ["Full gym access", "QR check-in & members app"];
 
 const FAQS = [
   { q: "Is there a free trial?", a: "Yes — walk in any day for a free trial session before you commit to a plan." },
@@ -31,7 +22,9 @@ const FAQS = [
 
 export const metadata = { title: "Membership Plans — ATP Fitness" };
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const plans = await getPublicMembershipPlans();
+
   return (
     <div className="container px-6 py-20">
       <div className="mx-auto mb-16 max-w-2xl text-center">
@@ -39,40 +32,44 @@ export default function PricingPage() {
         <p className="mt-4 text-muted-foreground">Straightforward pricing. No per-class fees, no hidden charges.</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {PLANS.map((plan) => (
-          <Card
-            key={plan.name}
-            className={cn("relative flex flex-col", plan.highlighted && "border-primary shadow-lg ring-1 ring-primary")}
-          >
-            {plan.highlighted && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
-                Most popular
-              </span>
-            )}
-            <CardHeader>
-              <CardTitle>{plan.name}</CardTitle>
-              <div className="flex items-baseline gap-1 pt-2">
-                <span className="text-3xl font-semibold">{plan.price}</span>
-                <span className="text-sm text-muted-foreground">{plan.period}</span>
-              </div>
-              <p className="text-sm text-muted-foreground">{plan.branches}</p>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col">
-              <ul className="flex-1 space-y-3">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {f}
-                  </li>
-                ))}
-              </ul>
-              <Button className="mt-6 w-full" variant={plan.highlighted ? "default" : "outline"} asChild>
-                <Link href="/contact">Book a free trial</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {plans.length === 0 ? (
+        <p className="text-center text-muted-foreground">Plans are being updated — check back shortly.</p>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <Card
+              key={plan.id}
+              className={cn("relative flex flex-col", plan.featured && "border-primary shadow-lg ring-1 ring-primary")}
+            >
+              {plan.featured && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+                  Most popular
+                </span>
+              )}
+              <CardHeader>
+                <CardTitle>{plan.name}</CardTitle>
+                <div className="flex items-baseline gap-1 pt-2">
+                  <span className="text-3xl font-semibold">{formatINR(plan.price)}</span>
+                  <span className="text-sm text-muted-foreground">{plan.periodLabel}</span>
+                </div>
+                {plan.description && <p className="text-sm text-muted-foreground">{plan.description}</p>}
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col">
+                <ul className="flex-1 space-y-3">
+                  {UNIVERSAL_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button className="mt-6 w-full" variant={plan.featured ? "default" : "outline"} asChild>
+                  <Link href="/contact">Book a free trial</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="mx-auto mt-24 max-w-2xl">
         <h2 className="text-center text-2xl font-semibold tracking-tight">Frequently asked questions</h2>

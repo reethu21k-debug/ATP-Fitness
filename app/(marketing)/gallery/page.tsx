@@ -2,13 +2,11 @@ import { Camera } from "lucide-react";
 
 const CATEGORIES = [
   { label: "Strength floor", gradient: "from-indigo-500 to-violet-600" },
-  { label: "Group classes", gradient: "from-fuchsia-500 to-pink-600" },
   { label: "Cardio zone", gradient: "from-sky-500 to-cyan-600" },
   { label: "Transformation stories", gradient: "from-amber-500 to-orange-600" },
   { label: "Trainer sessions", gradient: "from-emerald-500 to-teal-600" },
   { label: "Community events", gradient: "from-rose-500 to-red-600" },
   { label: "Recovery & stretch", gradient: "from-purple-500 to-indigo-600" },
-  { label: "Locker & amenities", gradient: "from-slate-500 to-slate-700" },
 ];
 
 export const metadata = { title: "Gallery — ATP Fitness" };

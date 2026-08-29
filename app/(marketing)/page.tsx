@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   Quote,
   Flame,
+  Dumbbell,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -52,58 +54,114 @@ export default function HomePage() {
       <BannerCarousel />
 
       {/* ================================================================ */}
-      {/*  HERO — the opening whistle                                      */}
+      {/*  HERO — redesigned: asymmetric layout, tighter type scale,       */}
+      {/*  and a "locker tag" scoreboard as the signature element.         */}
+      {/*  Same palette + font families as the rest of the page.           */}
       {/* ================================================================ */}
-      <section className="relative overflow-hidden pt-16 pb-16 sm:pt-20 sm:pb-24 lg:pt-28 lg:pb-32">
-        <div className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-[350px] w-[92vw] max-w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-[#E8262A]/15 via-[#F2B705]/5 to-transparent blur-[100px] sm:h-[550px] sm:blur-[140px]" />
+      <section className="relative overflow-hidden border-b border-white/10 pt-14 pb-16 sm:pt-20 sm:pb-24 lg:pt-24 lg:pb-28">
+        {/* ambient glow, shifted off-center to sit behind the locker tag */}
+        <div className="pointer-events-none absolute right-[-10%] top-[-10%] -z-10 h-[420px] w-[420px] rounded-full bg-gradient-to-br from-[#E8262A]/20 via-[#F2B705]/8 to-transparent blur-[110px] sm:h-[600px] sm:w-[600px]" />
 
-        <div className="container mx-auto px-4 text-center sm:px-6">
-          {/* Ticket-stub badge, torn edge via dashed border + notch shadows */}
-          <div className="relative mx-auto inline-flex items-center gap-3 rounded-md border border-dashed border-[#F2B705]/50 bg-[#151518] px-5 py-2 font-eyebrow text-xs font-semibold uppercase text-[#F2B705]">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#F2B705] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#F2B705]" />
-            </span>
-            Admit One — Free Trial Session
+        <div className="container mx-auto grid grid-cols-1 items-center gap-14 px-4 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
+          {/* ------------------------------------------------------------ */}
+          {/*  LEFT — copy, left-aligned, tighter type scale               */}
+          {/* ------------------------------------------------------------ */}
+          <div className="text-center lg:text-left">
+            <div className="relative mx-auto inline-flex items-center gap-2.5 rounded-md border border-dashed border-[#F2B705]/50 bg-[#151518] px-4 py-1.5 font-eyebrow text-[11px] font-semibold uppercase text-[#F2B705] lg:mx-0">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#F2B705] opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#F2B705]" />
+              </span>
+              Admit One — Free Trial Session
+            </div>
+
+            <h1 className="font-display mx-auto mt-7 max-w-xl text-4xl uppercase leading-[0.98] tracking-tight sm:text-6xl lg:mx-0 lg:text-6xl xl:text-7xl">
+              Train
+              <span className="text-[#E8262A]"> Different.</span>
+              <br />
+              <span className="text-[#F5F3EE]/90">Anantapur&apos;s Elite</span>
+              <br />
+              <span className="bg-gradient-to-r from-[#E8262A] to-[#F2B705] bg-clip-text text-transparent">
+                Strength Floor.
+              </span>
+            </h1>
+
+            <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-[#A6A6AF] sm:text-base lg:mx-0">
+              An uncompromising strength floor, high-octane group classes, and certified coaching — backed by a member app that logs every rep, meal, and milestone.
+            </p>
+
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+              <Button
+                size="lg"
+                className="h-12 w-full rounded-md bg-[#E8262A] px-7 font-eyebrow text-sm font-bold uppercase tracking-wide text-white shadow-[0_0_30px_-5px_rgba(232,38,42,0.55)] transition-all duration-300 hover:scale-[1.02] hover:bg-[#FF3236] sm:w-auto"
+                asChild
+              >
+                <Link href="/contact" className="flex items-center gap-2">
+                  Book a Free Trial <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 w-full rounded-md border-white/15 bg-transparent px-7 font-eyebrow text-sm font-semibold uppercase tracking-wide text-[#F5F3EE] transition-all duration-300 hover:border-[#F2B705]/60 hover:bg-[#151518] hover:text-[#F2B705] sm:w-auto"
+                asChild
+              >
+                <Link href="/pricing">See Membership Plans</Link>
+              </Button>
+            </div>
+
+            <p className="mx-auto mt-8 max-w-md font-eyebrow text-xs uppercase tracking-widest text-[#6E6E7A] lg:mx-0">
+              Drop in anytime for a guided tour of the floor
+            </p>
           </div>
 
-          <h1 className="font-display mx-auto mt-9 max-w-5xl text-5xl uppercase leading-[0.95] tracking-tight sm:text-7xl lg:text-8xl">
-            Train
-            <span className="text-[#E8262A]"> Different.</span>
-            <br />
-            <span className="text-[#F5F3EE]/90">Anantapur&apos;s Elite </span>
-            <span className="bg-gradient-to-r from-[#E8262A] to-[#F2B705] bg-clip-text text-transparent">
-              Strength Floor.
-            </span>
-          </h1>
+          {/* ------------------------------------------------------------ */}
+          {/*  RIGHT — signature element: a laminated "locker tag" card     */}
+          {/*  reading like a member ID pulled off the gym floor, angled    */}
+          {/*  slightly so it feels dropped-in rather than templated.       */}
+          {/* ------------------------------------------------------------ */}
+          <div className="mx-auto w-full max-w-sm lg:mx-0 lg:justify-self-end">
+            <div className="relative -rotate-2 rounded-2xl border border-white/10 bg-[#131316] p-6 shadow-[0_25px_60px_-20px_rgba(0,0,0,0.7)] transition-transform duration-500 hover:rotate-0 sm:p-8">
+              {/* punch hole + lanyard notch, sells the "tag" idea */}
+              <div className="absolute left-1/2 top-3 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-[#0A0A0C] ring-1 ring-white/10" />
 
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#A6A6AF] sm:text-lg lg:text-xl">
-            An uncompromising strength floor, high-octane group classes, and certified coaching — backed by a member app that logs every rep, meal, and milestone.
-          </p>
+              <div className="flex items-center justify-between border-b border-dashed border-white/15 pb-4">
+                <span className="font-eyebrow text-[10px] font-semibold uppercase tracking-widest text-[#6E6E7A]">
+                  Locker Tag
+                </span>
+                <span className="font-mono-score text-[10px] uppercase tracking-widest text-[#F2B705]">
+                  ATP · 001
+                </span>
+              </div>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="h-14 w-full rounded-md bg-[#E8262A] px-8 font-eyebrow text-base font-bold uppercase tracking-wide text-white shadow-[0_0_35px_-5px_rgba(232,38,42,0.55)] transition-all duration-300 hover:scale-[1.02] hover:bg-[#FF3236] sm:w-auto"
-              asChild
-            >
-              <Link href="/contact" className="flex items-center gap-2">
-                Book a Free Trial <ArrowRight className="h-5 w-5" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 w-full rounded-md border-white/15 bg-transparent px-8 font-eyebrow text-base font-semibold uppercase tracking-wide text-[#F5F3EE] transition-all duration-300 hover:border-[#F2B705]/60 hover:bg-[#151518] hover:text-[#F2B705] sm:w-auto"
-              asChild
-            >
-              <Link href="/pricing">See Membership Plans</Link>
-            </Button>
+              <div className="flex items-center gap-4 py-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-[#E8262A]/70 bg-[#0A0A0C]">
+                  <Dumbbell className="h-6 w-6 text-[#E8262A]" />
+                </div>
+                <div>
+                  <p className="font-eyebrow text-lg font-bold uppercase leading-tight text-[#F5F3EE]">
+                    First Session
+                  </p>
+                  <p className="font-mono-score text-xs uppercase tracking-widest text-[#6E6E7A]">
+                    On the house
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-white/10 bg-[#0A0A0C] px-4 py-3">
+                <div className="flex items-center gap-2 font-mono-score text-xs uppercase tracking-widest text-[#8E8E9A]">
+                  <Zap className="h-3.5 w-3.5 text-[#F2B705]" /> Status
+                </div>
+                <span className="font-eyebrow text-xs font-bold uppercase tracking-wide text-[#F2B705]">
+                  Open Today
+                </span>
+              </div>
+
+              <p className="mt-5 text-center font-eyebrow text-[11px] uppercase tracking-widest text-[#6E6E7A]">
+                Certified coaches, every session
+              </p>
+            </div>
           </div>
-
-          <p className="mt-5 font-eyebrow text-xs uppercase text-[#6E6E7A]">
-            No joining fee this month · Drop in anytime for a guided tour
-          </p>
         </div>
       </section>
 
@@ -276,7 +334,7 @@ export default function HomePage() {
 
               <div className="mt-6 flex items-center justify-center gap-2 font-eyebrow text-sm uppercase text-[#8E8E9A]">
                 <CheckCircle2 className="h-4 w-4 text-[#E8262A]" />
-                <span>No joining fee this month · Cancel or freeze anytime</span>
+                <span> Join the fitness journey Today </span>
               </div>
             </div>
           </div>

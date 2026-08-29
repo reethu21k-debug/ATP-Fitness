@@ -68,7 +68,11 @@ export async function createMembershipPlan(input: MembershipPlanFormInput): Prom
 
   if (error || !data) return { success: false, error: "Could not create the plan." };
 
+  // "/pricing" is the public marketing page -- revalidate it too so an
+  // owner's edit shows up there immediately instead of waiting for its
+  // normal cache window to expire.
   revalidatePath("/dashboard/owner/plans");
+  revalidatePath("/pricing");
   return { success: true, data: { planId: data.id } };
 }
 
@@ -110,6 +114,7 @@ export async function updateMembershipPlan(
   if (!data || data.length === 0) return { success: false, error: "Plan not found." };
 
   revalidatePath("/dashboard/owner/plans");
+  revalidatePath("/pricing");
   return { success: true };
 }
 
@@ -139,5 +144,6 @@ export async function setMembershipPlanActive(planId: string, isActive: boolean)
   if (!data || data.length === 0) return { success: false, error: "Plan not found." };
 
   revalidatePath("/dashboard/owner/plans");
+  revalidatePath("/pricing");
   return { success: true };
 }
