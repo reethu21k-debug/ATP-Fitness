@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Search, UserCheck, Loader2, CheckCircle2 } from "lucide-react";
-import { searchMembersForCheckIn, manualCheckIn, type CheckInMemberOption } from "@/lib/actions/attendance.actions";
+import { Search, UserCheck, UserX, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  searchMembersForCheckIn,
+  manualCheckIn,
+  manualCheckOut,
+  type CheckInMemberOption,
+} from "@/lib/actions/attendance.actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,8 +17,8 @@ export function ManualCheckInPanel() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CheckInMemberOption[]>([]);
   const [searching, setSearching] = useState(false);
-  const [checkingInId, setCheckingInId] = useState<string | null>(null);
-  const [justCheckedInId, setJustCheckedInId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [justChangedId, setJustChangedId] = useState<{ id: string; action: "in" | "out" } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -35,19 +40,36 @@ export function ManualCheckInPanel() {
 
   async function handleCheckIn(member: CheckInMemberOption) {
     setError(null);
-    setCheckingInId(member.memberId);
+    setPendingId(member.memberId);
     const result = await manualCheckIn(member.memberId);
-    setCheckingInId(null);
+    setPendingId(null);
 
     if (!result.success) {
       setError(result.error);
       return;
     }
-    setJustCheckedInId(member.memberId);
     setResults((prev) =>
       prev.map((m) => (m.memberId === member.memberId ? { ...m, alreadyCheckedIn: true } : m))
     );
-    setTimeout(() => setJustCheckedInId(null), 2000);
+    setJustChangedId({ id: member.memberId, action: "in" });
+    setTimeout(() => setJustChangedId(null), 2000);
+  }
+
+  async function handleCheckOut(member: CheckInMemberOption) {
+    setError(null);
+    setPendingId(member.memberId);
+    const result = await manualCheckOut(member.memberId);
+    setPendingId(null);
+
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    setResults((prev) =>
+      prev.map((m) => (m.memberId === member.memberId ? { ...m, alreadyCheckedIn: false } : m))
+    );
+    setJustChangedId({ id: member.memberId, action: "out" });
+    setTimeout(() => setJustChangedId(null), 2000);
   }
 
   return (
@@ -57,7 +79,7 @@ export function ManualCheckInPanel() {
           <UserCheck className="h-4 w-4" /> Manual check-in
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          For members without their phone — search by name or number and check them in directly.
+          For members without their phone — search by name or number to check them in or out directly.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -85,32 +107,56 @@ export function ManualCheckInPanel() {
 
         {results.length > 0 && (
           <ul className="divide-y rounded-lg border">
-            {results.map((member) => (
-              <li key={member.memberId} className="flex items-center justify-between gap-3 px-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{member.fullName}</p>
-                  <p className="truncate text-xs text-muted-foreground">{member.phone ?? "No phone on file"}</p>
-                </div>
-                {member.alreadyCheckedIn || justCheckedInId === member.memberId ? (
-                  <Badge variant="success" className="shrink-0">
-                    <CheckCircle2 className="h-3 w-3" /> Checked in
-                  </Badge>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="shrink-0"
-                    disabled={checkingInId === member.memberId}
-                    onClick={() => handleCheckIn(member)}
-                  >
-                    {checkingInId === member.memberId ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      "Check in"
-                    )}
-                  </Button>
-                )}
-              </li>
-            ))}
+            {results.map((member) => {
+              const justChanged = justChangedId?.id === member.memberId ? justChangedId.action : null;
+              return (
+                <li key={member.memberId} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{member.fullName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{member.phone ?? "No phone on file"}</p>
+                  </div>
+
+                  {justChanged ? (
+                    <Badge variant={justChanged === "in" ? "success" : "secondary"} className="shrink-0">
+                      <CheckCircle2 className="h-3 w-3" /> {justChanged === "in" ? "Checked in" : "Checked out"}
+                    </Badge>
+                  ) : member.alreadyCheckedIn ? (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Badge variant="success">
+                        <CheckCircle2 className="h-3 w-3" /> Checked in
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={pendingId === member.memberId}
+                        onClick={() => handleCheckOut(member)}
+                      >
+                        {pendingId === member.memberId ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <UserX className="h-3.5 w-3.5" /> Check out
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="shrink-0"
+                      disabled={pendingId === member.memberId}
+                      onClick={() => handleCheckIn(member)}
+                    >
+                      {pendingId === member.memberId ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        "Check in"
+                      )}
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>

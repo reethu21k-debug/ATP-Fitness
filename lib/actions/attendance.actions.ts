@@ -154,6 +154,44 @@ export async function manualCheckIn(memberId: string): Promise<ActionResult> {
 }
 
 // ============================================================================
+// MANUAL CHECK-OUT (front desk override — counterpart to manualCheckIn, for
+// members who forgot to tap out, or whose visit is being closed out by staff)
+// ============================================================================
+export async function manualCheckOut(memberId: string): Promise<ActionResult> {
+  try {
+    await requirePermission("attendance", "create");
+  } catch {
+    return { success: false, error: "You do not have permission to record attendance." };
+  }
+
+  const actor = await getCurrentProfile();
+  if (!actor?.gym_id) return { success: false, error: "Your account isn't linked to a gym." };
+
+  const supabase = await createClient();
+  const { data: openSession } = await supabase
+    .from("attendance_records")
+    .select("id")
+    .eq("member_id", memberId)
+    .eq("gym_id", actor.gym_id)
+    .is("check_out_at", null)
+    .maybeSingle();
+
+  if (!openSession) return { success: false, error: "This member doesn't have an active check-in." };
+
+  const { error } = await supabase
+    .from("attendance_records")
+    .update({ check_out_at: new Date().toISOString() })
+    .eq("id", openSession.id);
+
+  if (error) return { success: false, error: "Could not check them out. Try again." };
+
+  revalidatePath("/dashboard/owner/attendance");
+  revalidatePath("/dashboard/reception/attendance");
+  revalidatePath("/dashboard/trainer/attendance");
+  return { success: true };
+}
+
+// ============================================================================
 // MEMBER LOOKUP — lightweight search used by the manual check-in panel.
 // ============================================================================
 export interface CheckInMemberOption {
