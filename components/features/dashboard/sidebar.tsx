@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Dumbbell, Wallet, QrCode, Boxes, Megaphone,
   FileBarChart, Settings, Building2, ShieldCheck, MessagesSquare, Calendar,
-  Salad, TrendingUp, Ticket, Sparkles, Calculator, X, UserPlus, Clock,
+  Salad, TrendingUp, Ticket, Sparkles, Calculator, X, UserPlus, Clock, CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { AppRole } from "@/types/database";
@@ -29,6 +29,7 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
     { href: "/dashboard/owner/branches", label: "Branches", icon: Building2 },
     { href: "/dashboard/owner/members", label: "Members", icon: Users },
     { href: "/dashboard/owner/renewals", label: "Renewals", icon: Clock },
+    { href: "/dashboard/owner/plans", label: "Membership Plans", icon: CreditCard },
     { href: "/dashboard/owner/crm", label: "Leads & CRM", icon: Ticket },
     { href: "/dashboard/owner/payments", label: "Payments", icon: Wallet },
     { href: "/dashboard/owner/trainers", label: "Trainers", icon: Dumbbell },
